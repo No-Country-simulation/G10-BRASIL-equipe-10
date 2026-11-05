@@ -160,6 +160,33 @@
       "type": "string"
     }
   },
+  "examples": [
+    {
+      "armazenamento_oci": null,
+      "classificacao": {
+        "especialidade": "Clínica Geral",
+        "nivel_prioridade": "Rotina",
+        "score_confianca_classificacao": 0.93,
+        "tipo_documento": "Laudo de Exame de Imagem"
+      },
+      "dados_extraidos": {
+        "paciente": {
+          "idade": 52,
+          "nome": "Fulano de Souza"
+        }
+      },
+      "decisao_roteamento": {
+        "destino_principal": "Prontuario_Eletronico",
+        "justificativa_roteamento": "Laudo de rotina.",
+        "notificacao_gerada": null,
+        "regra_aplicada": "R-LAUDO",
+        "requer_auditoria_humana": false
+      },
+      "documento_id": "DOC-CLIN-2026-8942",
+      "problemas": [],
+      "status": "processado"
+    }
+  ],
   "properties": {
     "armazenamento_oci": {
       "anyOf": [

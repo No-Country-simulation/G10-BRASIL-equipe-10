@@ -2,6 +2,7 @@ import re
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # enum + submodelo de classificação e destino moram em app/modelos/ (fonte única
 # das categorias); são reexportados aqui para manter os imports antigos.
@@ -34,6 +35,18 @@ def validar_id(valor: str) -> str:
 
 
 class DocumentoEntrada(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "documento_id": "DOC-CLIN-2026-8942",
+                    "tipo_arquivo": "TEXTO",
+                    "documento_texto": "LAUDO. Paciente: Fulano de Souza, 52 anos.",
+                    "canal_origem": "Pronto_Socorro",
+                }
+            ]
+        }
+    )
     documento_id: str
     tipo_arquivo: str = "TEXTO"
     documento_texto: str
@@ -151,6 +164,34 @@ class ArmazenamentoOCI(BaseModel):  # H5.1.2 T1
 
 
 class ResultadoTriagem(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "status": "processado",
+                    "documento_id": "DOC-CLIN-2026-8942",
+                    "classificacao": {
+                        "tipo_documento": "Laudo de Exame de Imagem",
+                        "especialidade": "Clínica Geral",
+                        "nivel_prioridade": "Rotina",
+                        "score_confianca_classificacao": 0.93,
+                    },
+                    "dados_extraidos": {
+                        "paciente": {"nome": "Fulano de Souza", "idade": 52}
+                    },
+                    "problemas": [],
+                    "decisao_roteamento": {
+                        "destino_principal": "Prontuario_Eletronico",
+                        "requer_auditoria_humana": False,
+                        "justificativa_roteamento": "Laudo de rotina.",
+                        "regra_aplicada": "R-LAUDO",
+                        "notificacao_gerada": None,
+                    },
+                    "armazenamento_oci": None,
+                }
+            ]
+        }
+    )
     status: str
     documento_id: str
     classificacao: Classificacao | None = None

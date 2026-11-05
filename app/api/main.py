@@ -71,17 +71,22 @@ def _responder_consulta(documento_id: str):
 def criar_app(extrator=None) -> FastAPI:
     if extrator is None:
         from app.llm import extrair as extrator
-    app = FastAPI(title="MediFlow", version="0.1")
+    app = FastAPI(title="MediFlow", version="1.0")
     configurar_log()
     app.add_middleware(MedirTempoMiddleware)  # T8: log da duração de cada requisição
 
     @app.exception_handler(RequestValidationError)
     async def _422(request: Request, exc: RequestValidationError):
-        erro = exc.errors()[0]
-        campo = ".".join(str(p) for p in erro["loc"] if p != "body")
-        msg = erro["msg"].replace("Value error, ", "")
-        if erro["type"] == "missing":
-            msg = f"campo obrigatório ausente: {campo}"
+        erros = exc.errors()
+        faltantes = [
+            ".".join(str(p) for p in e["loc"] if p != "body")
+            for e in erros
+            if e["type"] == "missing"
+        ]
+        if faltantes:
+            msg = "; ".join(f"campo obrigatório ausente: {c}" for c in faltantes)
+        else:
+            msg = erros[0]["msg"].replace("Value error, ", "")
         return JSONResponse(status_code=422, content={"detail": msg})
 
     def _aceitar(

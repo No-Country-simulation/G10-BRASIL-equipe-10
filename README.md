@@ -261,6 +261,25 @@ O agente deverá produzir resultados em JSON, validados antes de serem persistid
 
 Este exemplo é ilustrativo. Os campos, estados, categorias e critérios de validação serão definidos durante a implementação. A confiança retornada pelo modelo não representa, por si só, uma medida clínica validada.
 
+## Integração via API
+
+Envie um documento de texto e aguarde o resultado:
+
+```bash
+curl -X POST "http://localhost:8000/triagem?aguardar=true" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "documento_id": "DOC-CLIN-2026-8942",
+    "tipo_arquivo": "TEXTO",
+    "documento_texto": "LAUDO. Paciente: Fulano de Souza, 52 anos.",
+    "canal_origem": "Pronto_Socorro"
+  }'
+```
+
+Sem `aguardar=true`, a API responde `202` com `{"documento_id": "...", "status": "recebido"}`; o resultado fica em `GET /triagem/{documento_id}`.
+
+Campo obrigatório ausente retorna `422` com `{"detail": "campo obrigatório ausente: <campo>"}`.
+
 ## 🧪 11. Cenários de demonstração do MVP
 
 O projeto deverá demonstrar pelo menos três cenários:

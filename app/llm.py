@@ -19,7 +19,7 @@ Regras:
 - Nunca invente dados. Se uma informação não estiver no texto, use null (ou lista vazia).
 - tipo_documento: use EXATAMENTE um dos valores abaixo, copiados por extenso (são as
   categorias oficiais). Se o documento não for clínico ou estiver fora das categorias clínicas (ex.: nota fiscal, contrato, cardápio), classifique obrigatoriamente como "Não identificado":
-  1) "Receituário Médico" — ex. sintético: "Prescrição: Dipirona 500 mg, 1 comprimido de 6 em 6 horas por 5 dias."
+  1) "Receituário Médico" — ex. sintético: "Prescrição: Dipirona 500 mg, 1 comprimido de 6 em 6 horas por 5 dias; Fluoxetina 25 miligramas, 1 comprimido por dia."
   2) "Laudo de Exame de Imagem" — ex. sintético: "Laudo de Tomografia de Tórax. Conclusão: nódulo no lobo superior direito."
   3) "Laudo Laboratorial" — ex. sintético: "Hemograma com contagem diferencial: hemoglobina 14,2 g/dL, leucócitos 6.300/mm³. Valores dentro da faixa normal."
   4) "Guia de Solicitação de Procedimento" — ex. sintético: "Guia TISS: solicito ressonância da coluna lombar para o paciente."
@@ -41,7 +41,7 @@ Regras:
 - exames: um item para CADA exame ou procedimento solicitado, nunca agrupado, com o nome copiado literalmente. codigo_tuss: somente se o código estiver escrito junto desse exame; nunca invente nem complete um código; caso contrário, null.
 
 - evidencias: para os campos principais preenchidos, copie o trecho EXATO do documento de onde veio.
-- inconsistencias: liste qualquer trecho ilegível ou contraditório.
+- inconsistencias: liste qualquer trecho ilegível ou contraditório. Campo ausente NÃO é inconsistência, se estiver vazio, retorne null.
 
 <documento>
 {texto}

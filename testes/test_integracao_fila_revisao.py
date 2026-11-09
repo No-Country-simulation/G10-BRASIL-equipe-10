@@ -28,8 +28,7 @@ def test_get_filas_revisao_na_aplicacao_real_devolve_200():
     )
     assert envio.status_code == 200  # pré-condição: processou sem erro
     assert (
-        envio.json()["decisao_roteamento"]["destino_principal"]
-        == "Fila_Revisao_Humana"
+        envio.json()["decisao_roteamento"]["destino_principal"] == "Fila_Revisao_Humana"
     )  # pré-condição: foi para a fila de revisão
 
     resp = cliente.get("/filas/revisao")

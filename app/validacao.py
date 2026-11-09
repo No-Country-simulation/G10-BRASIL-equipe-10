@@ -51,6 +51,11 @@ PENALIDADES = {
     "posologia_nao_confirmada": 0.15,  # h1.3.4
     "exame_inventado": 0.30,  # h1.3.5
 }
+# Mensagens de motivo/problema compartilhadas com roteamento.py e grafo.py
+FORA_DAS_CATEGORIAS = "documento fora das categorias"
+MOTIVO_FALHA_EXTRACAO = "falha na extração automática"
+MOTIVO_BAIXA_CONFIANCA = "baixa confiança na classificação"
+
 CID_REGEX = re.compile(r"^[A-Z]\d{2}(\.\d{1,2})?$")
 ARQUIVO_CID10 = Path(__file__).resolve().parents[1] / "config" / "cid10.csv"
 
@@ -320,7 +325,7 @@ def validar(extracao: Extracao, texto: str):
 
     # 3) Tipo e inconsistências apontadas pelo LLM
     if fora_das_categorias:
-        problemas.insert(0, "documento fora das categorias")
+        problemas.insert(0, FORA_DAS_CATEGORIAS)
         pen += PENALIDADES["tipo_desconhecido"]
     elif extracao.tipo_documento == "Desconhecido":
         problemas.append("Tipo de documento não identificado")
@@ -390,22 +395,33 @@ def motivo_revisao(
     categorias, baixa confiança, depois os problemas de validação.
     """
     if erro:
-        return f"falha na extração automática ({erro[:80]})"
-    if "documento fora das categorias" in (problemas or []):
-        return "documento fora das categorias"
+        return f"{MOTIVO_FALHA_EXTRACAO} ({erro[:80]})"
+    if FORA_DAS_CATEGORIAS in (problemas or []):
+        return FORA_DAS_CATEGORIAS
     if score < limite:
-        motivo = "baixa confiança na classificação"
+        motivo = MOTIVO_BAIXA_CONFIANCA
         if problemas:
             motivo += f"; {'; '.join(problemas)}"
         return motivo
     return "; ".join(problemas) or "revisão necessária"
 
 
+# Problemas que o próprio validar() já corrigiu sem risco clínico: só descontam
+# do score e aparecem na tela, mas sozinhos não mandam para revisão.
+# CID inválido: o código já foi removido (vira null) e o CID é só sugestão.
+PREFIXOS_AVISO = ("CID inválido",)
+
+
+def problemas_bloqueantes(problemas: list) -> list:
+    """Problemas que obrigam revisão humana (todos, menos os avisos)."""
+    return [p for p in (problemas or []) if not str(p).startswith(PREFIXOS_AVISO)]
+
+
 def precisa_revisao(score: float, problemas: list, limite: float | None = None) -> bool:
-    """Score baixo OU qualquer problema encontrado."""
+    """Score baixo OU algum problema bloqueante (avisos só descontam do score)."""
     if limite is None:
         limite = config.limite_confianca()
-    return score < limite or len(problemas) > 0
+    return score < limite or len(problemas_bloqueantes(problemas)) > 0
 
 
 def taxa_acerto_por_faixa(avaliacoes: list[dict], limite: float | None = None) -> dict:

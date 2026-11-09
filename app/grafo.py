@@ -12,12 +12,10 @@ from .modelos.destino import DecisaoRoteamento, Notificacao
 from .pdf import PDFSemTexto, extrair_texto_pdf, renderizar_paginas
 from .resposta import falha_de_processamento, montar_resposta
 from .schemas import Extracao
-from .validacao import validar
+from .validacao import FORA_DAS_CATEGORIAS, validar
 from .validacao_obrigatorios import campos_faltantes  # H4.1.2 T2
 
 logger = logging.getLogger(__name__)
-
-FORA_DAS_CATEGORIAS = "documento fora das categorias"
 
 
 # Dicionário compartilhado entre os nós do LangGraph

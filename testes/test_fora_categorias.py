@@ -29,7 +29,7 @@ from testes.fixtures.nao_clinicos import (
 )
 
 PAGINA_RESULTADO = str(
-    Path(__file__).resolve().parents[1] / "ui" / "pages" / "2_Resultado.py"
+    Path(__file__).resolve().parents[1] / "ui" / "pages" / "2_Triagem.py"
 )
 
 DESTINOS_DE_SETOR = {
@@ -146,7 +146,7 @@ def test_t2_validacao_e_grafo_registram_motivo_documento_fora_das_categorias():
 
 
 # ==============================================================================
-# T3 — Mostrar o aviso na tela (st.warning em ui/pages/2_Resultado.py)
+# T3 — Mostrar o aviso na tela (st.warning em ui/pages/2_Triagem.py)
 # ==============================================================================
 class _RespFalsa:
     def __init__(self, status: int, corpo: dict):

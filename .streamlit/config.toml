@@ -1,3 +1,15 @@
 # Rode o Streamlit a partir da raiz do projeto para este arquivo valer.
 [browser]
 gatherUsageStats = false
+
+[server]
+maxUploadSize = 10
+
+[theme.light]
+primaryColor = "#2563EB"
+backgroundColor = "#F8FAFD"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1E293B"
+
+[theme.dark]
+primaryColor = "#60A5FA"

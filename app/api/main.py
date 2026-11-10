@@ -1,5 +1,6 @@
 import logging
 import re
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, Request, UploadFile
@@ -7,10 +8,17 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from app import storage
+from app import config, storage
 from app.api.ligacao_fila import ligar_fila_revisao
 from app.api.tempo import MedirTempoMiddleware, configurar_log
-from app.arquivos import extensao_por_assinatura
+from app.arquivos import (
+    MAPA_EXTENSAO_FORMATO,
+    MAPA_FORMATO_EXTENSOES,
+    extensao_aceita,
+    extensao_por_assinatura,
+    montar_mensagem_formato_invalido,
+    montar_mensagem_tamanho_excedido,
+)
 from app.eventos import servico_padrao, status_do_documento
 from app.resposta import carregar_resultado
 from app.schemas import DocumentoEntrada, ResultadoTriagem, validar_id
@@ -26,6 +34,10 @@ MAX_ARQUIVO = 10 * 1024 * 1024
 # response_model porque estas rotas também devolvem 202 {"documento_id","status"}.
 # RESPOSTA_RESULTADO = {200: {"model": ResultadoTriagem, "description": "Resultado da triagem"}}
 RESPOSTA_RESULTADO = {"model": ResultadoTriagem, "description": "Resultado da triagem"}
+RESPOSTAS_ERRO_ARQUIVO = {
+    413: {"description": "Arquivo acima do limite permitido em MB"},
+    415: {"description": "Formato de arquivo não aceito"},
+}
 # T4: charset limpo para o ID da rota /documentos — sem "/", "\" nem "." (e
 # portanto sem ".."). A checagem acontece ANTES de montar qualquer caminho.
 ID_LIMPO = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -163,7 +175,11 @@ def criar_app(extrator=None) -> FastAPI:
             return recusa
         return _processar_original(documento_id, caminho, background, aguardar)
 
-    @app.post("/triagem/arquivo", status_code=202, responses={200: RESPOSTA_RESULTADO})
+    @app.post(
+        "/triagem/arquivo",
+        status_code=202,
+        responses={200: RESPOSTA_RESULTADO, **RESPOSTAS_ERRO_ARQUIVO},
+    )
     async def enviar_arquivo(
         background: BackgroundTasks,
         documento_id: Annotated[str, Form()],
@@ -171,25 +187,51 @@ def criar_app(extrator=None) -> FastAPI:
         arquivo: Annotated[UploadFile, File()],
         aguardar: bool = False,
     ):
-        """H1.1.3 T1: PDF (digital ou escaneado), JPG ou PNG.
+        """H1.1.4 T2: validação de formato e tamanho antes de qualquer persistência.
 
-        O tipo vem dos bytes iniciais do arquivo, não do nome nem do MIME enviado.
+        Formato não aceito devolve HTTP 415 com os formatos aceitos.
+        Arquivo acima do limite devolve HTTP 413 com o limite em MB.
         """
         try:
             documento_id = validar_id(documento_id)
         except ValueError as e:
             return JSONResponse(status_code=422, content={"detail": str(e)})
-        conteudo = await arquivo.read(MAX_ARQUIVO + 1)
-        if len(conteudo) > MAX_ARQUIVO:
-            return JSONResponse(
-                status_code=413, content={"detail": "arquivo acima de 10 MB"}
-            )
+
+        limite_mb = config.tamanho_maximo_mb()
+        max_bytes = limite_mb * 1024 * 1024
+        formatos = config.formatos_aceitos()
+        msg_formato = montar_mensagem_formato_invalido(formatos)
+        msg_tamanho = montar_mensagem_tamanho_excedido(limite_mb)
+
+        # 1. Validação de extensão informada no nome do arquivo
+        if arquivo.filename:
+            ext_nome = Path(arquivo.filename).suffix.lower()
+            if ext_nome and not extensao_aceita(arquivo.filename, formatos):
+                return JSONResponse(status_code=415, content={"detail": msg_formato})
+
+        # 2. Validação de tamanho (lê no máximo limite + 1 byte para não estourar memória)
+        conteudo = await arquivo.read(max_bytes + 1)
+        if len(conteudo) > max_bytes:
+            return JSONResponse(status_code=413, content={"detail": msg_tamanho})
+
+        # 3. Validação de assinatura do arquivo (bytes iniciais de PDF, PNG e JPEG)
         extensao = extensao_por_assinatura(conteudo)
         if extensao is None:
-            return JSONResponse(
-                status_code=422,
-                content={"detail": "formato não suportado: envie PDF, JPG ou PNG"},
-            )
+            return JSONResponse(status_code=415, content={"detail": msg_formato})
+
+        # Confere se o formato detectado pela assinatura está na lista de formatos aceitos
+        formato_detectado = MAPA_EXTENSAO_FORMATO.get(extensao)
+        if formato_detectado not in formatos:
+            return JSONResponse(status_code=415, content={"detail": msg_formato})
+
+        # Se o nome do arquivo tinha extensão aceita, confere se bate com a assinatura real
+        if arquivo.filename:
+            ext_nome = Path(arquivo.filename).suffix.lower()
+            if ext_nome and ext_nome not in MAPA_FORMATO_EXTENSOES.get(
+                formato_detectado, set()
+            ):
+                return JSONResponse(status_code=415, content={"detail": msg_formato})
+
         caminho, recusa = _aceitar(documento_id, conteudo, extensao)
         if recusa or caminho is None:
             return recusa

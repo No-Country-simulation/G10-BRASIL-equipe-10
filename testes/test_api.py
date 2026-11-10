@@ -278,17 +278,23 @@ def test_jpg_e_aceito_e_salvo_como_jpg(cliente, monkeypatch):
     assert storage.existe("recebidos/IMG-003.jpg")
 
 
-def test_formato_nao_suportado_422(cliente):
+def test_formato_nao_suportado_415(cliente):
     r = _enviar_arquivo(
         cliente, "IMG-004", b"isto nao e imagem", "falso.png", "image/png"
     )
-    assert r.status_code == 422 and "formato não suportado" in r.json()["detail"]
+    assert r.status_code == 415
+    detalhe = r.json()["detail"]
+    assert "Formato não aceito" in detalhe or "formato" in detalhe.lower()
+    assert "PDF" in detalhe and "JPG" in detalhe and "PNG" in detalhe
     assert not storage.existe("recebidos/IMG-004.png")  # nada foi gravado
 
 
 def test_arquivo_acima_de_10mb_413(cliente):
     grande = b"\x89PNG\r\n\x1a\n" + b"0" * (10 * 1024 * 1024 + 1)
-    assert _enviar_arquivo(cliente, "IMG-005", grande).status_code == 413
+    r = _enviar_arquivo(cliente, "IMG-005", grande)
+    assert r.status_code == 413
+    assert "10" in r.json()["detail"] and "MB" in r.json()["detail"]
+    assert not storage.existe("recebidos/IMG-005.png")  # nada foi gravado
 
 
 def test_imagem_com_id_repetido_409(cliente, monkeypatch):

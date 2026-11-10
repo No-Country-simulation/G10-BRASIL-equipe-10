@@ -6,7 +6,7 @@ import pytest
 import requests
 from streamlit.testing.v1 import AppTest
 
-PAGINA = str(Path(__file__).resolve().parents[1] / "ui" / "pages" / "2_Resultado.py")
+PAGINA = str(Path(__file__).resolve().parents[1] / "ui" / "pages" / "2_Triagem.py")
 
 
 class Resp:

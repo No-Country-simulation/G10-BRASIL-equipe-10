@@ -1,6 +1,6 @@
 """H1.3.1 T3 — Bloco "Paciente" da tela de resultado.
 
-Fica num arquivo próprio (e não dentro de ui/pages/2_Resultado.py) para não gerar
+Fica num arquivo próprio (e não dentro de ui/pages/2_Triagem.py) para não gerar
 conflito com quem cria a página de resultado (H1.2.1 T4). A página só precisa de:
 
     from componentes.paciente import bloco_paciente

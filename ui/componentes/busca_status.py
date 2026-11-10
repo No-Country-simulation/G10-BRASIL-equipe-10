@@ -1,4 +1,4 @@
-"""H2.3.2 T5 — chame render() no topo de ui/pages/2_Resultado.py."""
+"""H2.3.2 T5 — chame render() no topo de ui/pages/2_Triagem.py."""
 
 import os
 

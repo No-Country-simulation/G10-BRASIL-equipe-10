@@ -54,3 +54,22 @@ def modelo_gemini() -> str:
 def modelo_gemini_fallback() -> str:
     """Modelo usado quando o principal devolve 5xx (ex.: 503 por alta demanda)."""
     return os.getenv("GEMINI_MODEL_FALLBACK", "gemini-3.5-flash")
+
+
+def formatos_aceitos() -> list[str]:
+    """Formatos aceitos na rota /triagem/arquivo (H1.1.4 T1)."""
+    formatos = carregar_regras().get("formatos_aceitos")
+    if isinstance(formatos, list) and formatos:
+        return [str(f).upper() for f in formatos]
+    return ["PDF", "JPG", "PNG"]
+
+
+def tamanho_maximo_mb() -> int:
+    """Limite máximo de upload em MB (H1.1.4 T1). Precedência: env TAMANHO_MAXIMO_MB > regras.json > 10."""
+    bruto = os.getenv("TAMANHO_MAXIMO_MB")
+    if bruto is None:
+        bruto = carregar_regras().get("tamanho_maximo_mb", 10)
+    try:
+        return int(bruto)
+    except (TypeError, ValueError):
+        return 10

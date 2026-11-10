@@ -98,7 +98,7 @@ processar('DOC-CRM-INVALIDO', LAUDO_TEP, None, FakeLLM(
 ## 4. Testar na Interface Visual (`http://localhost:8501`)
 
 1. Abra **`http://localhost:8501`** no navegador.
-2. No menu lateral esquerdo, clique em **Resultado** ([ui/pages/2_Resultado.py](../ui/pages/2_Resultado.py)).
+2. No menu lateral esquerdo, clique em **Resultado** ([ui/pages/2_Triagem.py](../ui/pages/2_Triagem.py)).
 3. Pesquise cada um dos IDs abaixo e confira os critérios de aceite na tela:
 
 | ID do Documento | História Testada | Resultado Esperado na Tela |

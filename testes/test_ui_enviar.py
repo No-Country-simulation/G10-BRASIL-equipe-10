@@ -6,7 +6,7 @@ import requests
 from streamlit.testing.v1 import AppTest
 
 RAIZ = Path(__file__).resolve().parents[1]
-PAGINA = str(RAIZ / "ui" / "pages" / "1_Enviar.py")
+PAGINA = str(RAIZ / "ui" / "pages" / "1_Documentos.py")
 REGRAS = json.loads((RAIZ / "config" / "regras.json").read_text(encoding="utf-8"))
 TEXTO = "RECEITUARIO sintetico. Paciente: Fulano de Tal. Amoxicilina 500mg."
 
@@ -140,6 +140,8 @@ def test_url_invalida_bloqueia_a_tela(monkeypatch):
     "status,detalhe",
     [
         (409, "documento_id já recebido: DOC-TESTE1"),
+        (413, "Arquivo acima do limite de 10 MB."),
+        (415, "Formato não aceito. Envie PDF, JPG ou PNG."),
         (422, "documento vazio"),
     ],
 )

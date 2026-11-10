@@ -8,5 +8,6 @@
     "Fila_Emergencia_Medica",
     "Fila_Revisao_Humana"
   ],
-  "formatos_aceitos": ["PDF", "JPG", "PNG"]
+  "formatos_aceitos": ["PDF", "JPG", "PNG"],
+  "tamanho_maximo_mb": 10
 }
